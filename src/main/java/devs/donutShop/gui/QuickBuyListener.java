@@ -61,12 +61,14 @@ public class QuickBuyListener implements Listener {
                         gui.refresh();
                     }
                 } else if (!empty) {
-                    String cmd = plugin.getConfig().getString("buy-command", "ah {item}")
-                            .replace("{item}", ShopDialogManager.formatItemName(stored.getType().name()))
-                            .replace("{material}", stored.getType().name())
-                            .replace("{amount}", String.valueOf(stored.getAmount()))
-                            .replace("{player}", p.getName());
-                    runCommandLater(p, cmd, plugin.getConfig().getBoolean("buy-command-as-console", false));
+                    ItemStack give = stored.clone();
+                    if (!canFit(p, give)) {
+                        p.sendMessage("§cInventory kamu penuh.");
+                        return;
+                    }
+                    p.getInventory().addItem(give);
+                    p.sendMessage("§aKamu mendapatkan §f" + give.getAmount() + "x "
+                            + ShopDialogManager.formatItemName(give.getType().name()) + "§a.");
                 }
             }
         }
@@ -79,5 +81,17 @@ public class QuickBuyListener implements Listener {
             if (console) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
             else p.performCommand(cmd);
         });
+    }
+
+    private boolean canFit(Player p, ItemStack item) {
+        int need = item.getAmount();
+        int max = item.getMaxStackSize();
+        int space = 0;
+        for (ItemStack c : p.getInventory().getStorageContents()) {
+            if (c == null || c.getType().isAir()) space += max;
+            else if (c.isSimilar(item)) space += Math.max(0, max - c.getAmount());
+            if (space >= need) return true;
+        }
+        return false;
     }
 }
