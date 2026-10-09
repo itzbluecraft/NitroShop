@@ -10,10 +10,10 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.IOException;
 
-/** Menyimpan layout Quick Buy per pemain (45 slot) di data.yml. */
+/** Menyimpan layout Quick Buy per pemain (54 slot) di data.yml. */
 public class ShopDataManager {
 
-    public static final int SLOTS = 45;
+    public static final int SLOTS = 54;
 
     private final DonutShop plugin;
     private final File file;
@@ -58,6 +58,23 @@ public class ShopDataManager {
     public Double getPrice(Material material) {
         String path = "prices." + material.name();
         return plugin.getConfig().contains(path) ? plugin.getConfig().getDouble(path) : null;
+    }
+
+    /** Harga per 1 item, termasuk tambahan dari enchant. */
+    public double getUnitPrice(ItemStack item) {
+        String path = "prices." + item.getType().name();
+        double base = plugin.getConfig().contains(path)
+                ? plugin.getConfig().getDouble(path)
+                : plugin.getConfig().getDouble("default-price", 100);
+        double perLevel = plugin.getConfig().getDouble("enchant-price-per-level", 500);
+        int levels = 0;
+        for (int lvl : item.getEnchantments().values()) levels += lvl;
+        return base + levels * perLevel;
+    }
+
+    /** Harga total untuk seluruh jumlah di slot. */
+    public double getTotalPrice(ItemStack item) {
+        return getUnitPrice(item) * item.getAmount();
     }
 
     public void save() {
