@@ -28,6 +28,7 @@ public class ShopDialogManager {
         Material material;
         final Map<String, Integer> enchants = new LinkedHashMap<>();
         ItemStack item;
+        int amount = 1;
     }
 
     private static final int MAX_RESULTS = 100;
@@ -52,6 +53,8 @@ public class ShopDialogManager {
 
     private final DonutShop plugin;
     private final Map<UUID, Pending> pending = new HashMap<>();
+    /** Pemain yang harus kembali ke mode edit setelah dialog selesai/dibatalkan. */
+    private final Set<UUID> returnEdit = new HashSet<>();
 
     public ShopDialogManager(DonutShop plugin) {
         this.plugin = plugin;
@@ -61,6 +64,15 @@ public class ShopDialogManager {
 
     private String cmd(String rest) {
         return plugin.getConfig().getString("dialog-command-prefix", "/") + rest;
+    }
+
+    public void markEdit(Player p, boolean edit) {
+        if (edit) returnEdit.add(p.getUniqueId());
+        else returnEdit.remove(p.getUniqueId());
+    }
+
+    private String cancelCmd(Player p) {
+        return cmd(returnEdit.contains(p.getUniqueId()) ? "shop __edit" : "shop");
     }
 
     private void show(Player p, String json) {
@@ -191,7 +203,7 @@ public class ShopDialogManager {
                 + "\"inputs\":[{\"type\":\"minecraft:text\",\"key\":\"search_item\",\"label\":\"Search\"}],"
                 + "\"actions\":[" + actions + "],"
                 + "\"exit_action\":{\"label\":\"§cCancel\",\"action\":{\"type\":\"minecraft:run_command\",\"command\":\""
-                + cmd("shop __edit") + "\"}}}";
+                + cancelCmd(p) + "\"}}}";
         show(p, json);
     }
 
@@ -227,12 +239,14 @@ public class ShopDialogManager {
 
     public void openAmountDialog(Player p, int slot, ItemStack item) {
         int maxStack = item.getMaxStackSize();
+        Pending cur = pending.get(p.getUniqueId());
+        int initial = cur != null ? Math.max(1, Math.min(cur.amount, maxStack)) : 1;
         String json = "{\"type\":\"minecraft:multi_action\",\"title\":\"Choose Amount\","
                 + "\"body\":[{\"type\":\"minecraft:item\",\"item\":{\"id\":\"" + item.getType().getKey()
                 + "\",\"count\":1}},{\"type\":\"minecraft:plain_message\",\"contents\":\"Max per purchase: " + maxStack + "\"}],"
-                + "\"inputs\":[{\"type\":\"minecraft:text\",\"key\":\"buy_amount\",\"label\":\"Amount\",\"initial\":\"1\"}],"
+                + "\"inputs\":[{\"type\":\"minecraft:text\",\"key\":\"buy_amount\",\"label\":\"Amount\",\"initial\":\"" + initial + "\"}],"
                 + "\"actions\":["
-                + "{\"label\":\"§cCancel\",\"action\":{\"type\":\"minecraft:run_command\",\"command\":\"" + cmd("shop __edit") + "\"}},"
+                + "{\"label\":\"§cCancel\",\"action\":{\"type\":\"minecraft:run_command\",\"command\":\"" + cancelCmd(p) + "\"}},"
                 + "{\"label\":\"Add to Quick Buy\",\"action\":{\"type\":\"minecraft:dynamic/run_command\",\"template\":\""
                 + cmd("shop __setamount ") + slot + " $(buy_amount)\"}}]}";
         show(p, json);
@@ -251,6 +265,25 @@ public class ShopDialogManager {
             openAmountDialog(p, slot, pd.item);
         } else {
             openChooseEnchantmentsDialog(p, slot, material, pd.enchants);
+        }
+    }
+
+    /** Edit item yang sudah ada di slot (enchant + jumlah). */
+    public void editItem(Player p, int slot, ItemStack stored) {
+        Pending pd = new Pending();
+        pd.slot = slot;
+        pd.material = stored.getType();
+        pd.amount = stored.getAmount();
+        for (Map.Entry<Enchantment, Integer> en : stored.getEnchantments().entrySet()) {
+            pd.enchants.put(en.getKey().getKey().getKey(), en.getValue());
+        }
+        pending.put(p.getUniqueId(), pd);
+
+        if (getOrderedEnchantments(pd.material).isEmpty()) {
+            pd.item = new ItemStack(pd.material);
+            openAmountDialog(p, slot, pd.item);
+        } else {
+            openChooseEnchantmentsDialog(p, slot, pd.material, pd.enchants);
         }
     }
 
@@ -297,9 +330,10 @@ public class ShopDialogManager {
     }
 
     public void setAmount(Player p, int slot, String rawAmount) {
+        boolean edit = returnEdit.contains(p.getUniqueId());
         Pending pd = pending.get(p.getUniqueId());
         if (pd == null || pd.item == null) {
-            QuickBuyGUI.open(p, true);
+            QuickBuyGUI.open(p, edit);
             return;
         }
         int amount;
@@ -315,7 +349,8 @@ public class ShopDialogManager {
         item.setAmount(amount);
         plugin.getDataManager().setItem(p, slot, item);
         pending.remove(p.getUniqueId());
-        QuickBuyGUI.open(p, true);
+        returnEdit.remove(p.getUniqueId());
+        QuickBuyGUI.open(p, edit);
     }
 
     // ------------------------------------------------------- enchantments
@@ -336,4 +371,5 @@ public class ShopDialogManager {
         combined.addAll(curses);
         return combined;
     }
-}
+    }
+                
