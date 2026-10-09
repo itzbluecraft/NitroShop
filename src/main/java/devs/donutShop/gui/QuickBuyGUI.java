@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
-/** Menu "Shop" sederhana: 54 slot berisi item milik pemain, tanpa tombol. */
+/** Menu "Shop" sederhana: 54 slot, sama untuk semua pemain, tanpa tombol. */
 public class QuickBuyGUI implements InventoryHolder {
 
     public static final int SIZE = ShopDataManager.SLOTS; // 54
@@ -50,8 +50,12 @@ public class QuickBuyGUI implements InventoryHolder {
                     double price = DonutShop.getInstance().getDataManager().getTotalPrice(layout[i]);
                     lore.add("");
                     lore.add("§7Price: §a" + DonutShop.getInstance().formatPrice(price));
-                    lore.add("§eLeft-click: buy");
-                    lore.add("§7Right-click: edit");
+                    if (player.hasPermission("donutshop.admin")) {
+                        lore.add("§eLeft-click: buy");
+                        lore.add("§7Right-click: edit");
+                    } else {
+                        lore.add("§eClick to buy");
+                    }
                     meta.setLore(lore);
                     display.setItemMeta(meta);
                 }
