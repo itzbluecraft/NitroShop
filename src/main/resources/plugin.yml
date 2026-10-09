@@ -1,7 +1,8 @@
-name: DonutShop
+name: NitroShop
 version: 1.0-SNAPSHOT
 main: devs.donutShop.DonutShop
 api-version: '1.21'
+softdepend: [Vault]
 commands:
   shop:
     description: Opens the Shop menu
