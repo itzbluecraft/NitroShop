@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.IOException;
 
-/** Menyimpan layout Quick Buy per pemain (54 slot) di data.yml. */
+/** Menyimpan isi Shop (54 slot, sama untuk semua pemain) di data.yml. */
 public class ShopDataManager {
 
     public static final int SLOTS = 54;
@@ -24,11 +24,33 @@ public class ShopDataManager {
         this.file = new File(plugin.getDataFolder(), "data.yml");
         plugin.getDataFolder().mkdirs();
         this.yaml = YamlConfiguration.loadConfiguration(file);
+        seedDefaults();
     }
 
+    /** Isi awal Shop (hanya kalau Shop masih belum pernah dibuat). Admin bisa mengubahnya lewat menu. */
+    private void seedDefaults() {
+        if (yaml.contains("shop")) return;
+        Object[][] items = {
+                {10, Material.DIAMOND_HELMET, 1}, {11, Material.DIAMOND_CHESTPLATE, 1},
+                {12, Material.DIAMOND_LEGGINGS, 1}, {13, Material.DIAMOND_BOOTS, 1},
+                {14, Material.DIAMOND_SWORD, 1}, {15, Material.DIAMOND_PICKAXE, 1},
+                {16, Material.DIAMOND_AXE, 1},
+                {19, Material.OBSIDIAN, 64}, {20, Material.END_CRYSTAL, 64},
+                {21, Material.CRYING_OBSIDIAN, 64}, {22, Material.TOTEM_OF_UNDYING, 1},
+                {23, Material.ENDER_PEARL, 16},
+                {28, Material.COBWEB, 64}, {29, Material.GOLDEN_APPLE, 64},
+                {30, Material.EXPERIENCE_BOTTLE, 64}
+        };
+        for (Object[] it : items) {
+            yaml.set("shop." + it[0], new ItemStack((Material) it[1], (Integer) it[2]));
+        }
+        save();
+    }
+
+    /** Isi Shop. Parameter player dipertahankan agar kode lain tetap cocok (Shop sama untuk semua). */
     public ItemStack[] getLayout(Player player) {
         ItemStack[] layout = new ItemStack[SLOTS];
-        ConfigurationSection sec = yaml.getConfigurationSection("players." + player.getUniqueId());
+        ConfigurationSection sec = yaml.getConfigurationSection("shop");
         if (sec == null) return layout;
         for (String key : sec.getKeys(false)) {
             int i;
@@ -45,12 +67,14 @@ public class ShopDataManager {
     }
 
     public void setItem(Player player, int slot, ItemStack item) {
-        yaml.set("players." + player.getUniqueId() + "." + slot, item);
+        yaml.set("shop." + slot, item);
         save();
     }
 
     public void removeItem(Player player, int slot) {
-        yaml.set("players." + player.getUniqueId() + "." + slot, null);
+        // set kosong lalu pastikan section "shop" tetap ada supaya isi awal tidak muncul lagi
+        yaml.set("shop." + slot, null);
+        if (!yaml.contains("shop")) yaml.createSection("shop");
         save();
     }
 
