@@ -17,8 +17,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * /shop            -> buka Quick Buy
- * /shop __xxx ...  -> sub-command internal yang dipanggil tombol dialog
+ * /shop            -> buka Shop
+ * /shop __xxx ...  -> sub-command internal yang dipanggil tombol dialog (admin saja)
  */
 public class ShopCommand implements CommandExecutor, TabCompleter {
 
@@ -41,7 +41,14 @@ public class ShopCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
+        String sub = args[0].toLowerCase();
+        // Sub-command internal (dialog) hanya untuk admin
+        if (sub.startsWith("__") && !p.hasPermission("donutshop.admin")) {
+            QuickBuyGUI.open(p);
+            return true;
+        }
+
+        switch (sub) {
             case "__chooseitem" -> {
                 Integer slot = slot(args, 1);
                 if (slot == null) return true;
