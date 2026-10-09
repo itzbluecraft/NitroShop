@@ -40,22 +40,25 @@ public class QuickBuyListener implements Listener {
         ItemStack stored = plugin.getDataManager().getLayout(p)[slot];
         boolean empty = stored == null || stored.getType().isAir();
 
-        // Slot kosong: langsung pilih item baru
+        boolean admin = p.hasPermission("donutshop.admin");
+
+        // Empty slot: admins can add a new item
         if (empty) {
+            if (!admin) return;
             Bukkit.getScheduler().runTask(plugin, () -> dialogs.openChooseItemDialog(p, slot, ""));
             return;
         }
 
-        // Klik kanan: edit item (enchant, jumlah, atau hapus)
-        if (e.isRightClick()) {
+        // Right-click (admin): edit item (enchantments, amount, or delete)
+        if (admin && e.isRightClick()) {
             Bukkit.getScheduler().runTask(plugin, () -> dialogs.editItem(p, slot, stored));
             return;
         }
 
-        // Klik kiri: beli item
+        // Buy item
         ItemStack give = stored.clone();
         if (!canFit(p, give)) {
-            p.sendMessage("§cInventory kamu penuh.");
+            p.sendMessage("§cYour inventory is full.");
             return;
         }
 
@@ -63,12 +66,12 @@ public class QuickBuyListener implements Listener {
         Economy eco = plugin.getEconomy();
         if (eco != null && price > 0) {
             if (!eco.has(p, price)) {
-                p.sendMessage("§cUangmu kurang. Butuh §f" + plugin.formatPrice(price) + "§c.");
+                p.sendMessage("§cNot enough money. You need §f" + plugin.formatPrice(price) + "§c.");
                 return;
             }
             EconomyResponse r = eco.withdrawPlayer(p, price);
             if (!r.transactionSuccess()) {
-                p.sendMessage("§cPembayaran gagal.");
+                p.sendMessage("§cPayment failed.");
                 return;
             }
         }
@@ -76,10 +79,10 @@ public class QuickBuyListener implements Listener {
         p.getInventory().addItem(give);
         String name = ShopDialogManager.formatItemName(give.getType().name());
         if (eco != null && price > 0) {
-            p.sendMessage("§aKamu membeli §f" + give.getAmount() + "x " + name
-                    + " §aseharga §f" + plugin.formatPrice(price) + "§a.");
+            p.sendMessage("§aYou bought §f" + give.getAmount() + "x " + name
+                    + " §afor §f" + plugin.formatPrice(price) + "§a.");
         } else {
-            p.sendMessage("§aKamu mendapatkan §f" + give.getAmount() + "x " + name + "§a.");
+            p.sendMessage("§aYou received §f" + give.getAmount() + "x " + name + "§a.");
         }
     }
 
