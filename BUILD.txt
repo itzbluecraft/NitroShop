@@ -1,0 +1,6 @@
+Cara dapat .jar tanpa PC:
+1. Buat repo baru di GitHub, upload semua isi folder DonutShop ini (termasuk folder .github).
+2. Buka tab Actions -> workflow "Build DonutShop" jalan otomatis (atau Run workflow).
+3. Setelah hijau, buka run-nya -> bagian Artifacts -> download "DonutShop-jar".
+
+Di PC/Termux: jalankan `mvn package`, hasilnya ada di target/DonutShop-1.0-SNAPSHOT.jar

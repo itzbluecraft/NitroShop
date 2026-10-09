@@ -1,0 +1,26 @@
+# Command yang dijalankan (tanpa "/") -- sesuaikan dengan plugin auction (/ah) di servermu.
+# Placeholder: {item} = nama item (contoh "Diamond Boots"), {material} = DIAMOND_BOOTS,
+#              {amount} = jumlah yang disimpan di slot, {player} = nama pemain.
+
+# Dijalankan saat pemain klik item di Quick Buy (di luar mode edit)
+buy-command: "ah {item}"
+# true = dijalankan oleh console, false = oleh pemain
+buy-command-as-console: false
+
+# Tombol "Auction" (anvil)
+auction-command: "ah"
+# Tombol "Your Items" (chest)
+your-items-command: "ah"
+# Template dialog "Search" (tombol sign). $(search_term) = teks yang diketik pemain
+search-command-template: "ah $(search_term)"
+
+# Awalan command di dalam dialog (run_command). Kalau tombol dialog tidak jalan,
+# coba ganti jadi "" (kosong).
+dialog-command-prefix: "/"
+
+# Opsional: harga per item. Dipakai untuk lore "Price" dan filter Cheapest / Most Expensive.
+# Item tanpa harga selalu ditaruh paling akhir saat difilter berdasarkan harga.
+prices:
+  DIAMOND: 500
+  DIAMOND_BOOTS: 1500
+  NETHERITE_INGOT: 3000
