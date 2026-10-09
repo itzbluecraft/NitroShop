@@ -77,7 +77,8 @@ public class QuickBuyGUI implements InventoryHolder {
                         List<String> lore = meta.hasLore() && meta.getLore() != null
                                 ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
                         lore.add("");
-                        lore.add("§cClick to remove from Quick Buy");
+                        lore.add("§eLeft-click: edit item");
+                        lore.add("§cRight-click: remove");
                         meta.setLore(lore);
                         display.setItemMeta(meta);
                     }
