@@ -1,4 +1,4 @@
-name: NitroShop
+name: DonutShop
 version: 1.0-SNAPSHOT
 main: devs.donutShop.DonutShop
 api-version: '1.21'
@@ -7,3 +7,7 @@ commands:
   shop:
     description: Opens the Shop menu
     aliases: [buy, quickbuy, qb]
+permissions:
+  donutshop.admin:
+    description: Edit isi Shop (tambah, ubah, hapus item)
+    default: op
