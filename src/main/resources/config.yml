@@ -1,26 +1,75 @@
-# Command yang dijalankan (tanpa "/") -- sesuaikan dengan plugin auction (/ah) di servermu.
-# Placeholder: {item} = nama item (contoh "Diamond Boots"), {material} = DIAMOND_BOOTS,
-#              {amount} = jumlah yang disimpan di slot, {player} = nama pemain.
+# Simbol mata uang
+currency-symbol: "$"
 
-# Dijalankan saat pemain klik item di Quick Buy (di luar mode edit)
-buy-command: "ah {item}"
-# true = dijalankan oleh console, false = oleh pemain
-buy-command-as-console: false
+# Harga per 1 item (dikali jumlah di slot). Item yang tidak ada di daftar memakai default-price.
+default-price: 100
 
-# Tombol "Auction" (anvil)
-auction-command: "ah"
-# Tombol "Your Items" (chest)
-your-items-command: "ah"
-# Template dialog "Search" (tombol sign). $(search_term) = teks yang diketik pemain
-search-command-template: "ah $(search_term)"
+# Tambahan harga untuk tiap level enchant (per item). Contoh: Sharpness V = 5 level x ini.
+enchant-price-per-level: 500
 
 # Awalan command di dalam dialog (run_command). Kalau tombol dialog tidak jalan,
 # coba ganti jadi "" (kosong).
 dialog-command-prefix: "/"
 
-# Opsional: harga per item. Dipakai untuk lore "Price" dan filter Cheapest / Most Expensive.
-# Item tanpa harga selalu ditaruh paling akhir saat difilter berdasarkan harga.
 prices:
+  # Bahan
   DIAMOND: 500
-  DIAMOND_BOOTS: 1500
-  NETHERITE_INGOT: 3000
+  EMERALD: 300
+  GOLD_INGOT: 150
+  IRON_INGOT: 80
+  NETHERITE_SCRAP: 1500
+  NETHERITE_INGOT: 6000
+  # Armor diamond
+  DIAMOND_HELMET: 3000
+  DIAMOND_CHESTPLATE: 5000
+  DIAMOND_LEGGINGS: 4500
+  DIAMOND_BOOTS: 2500
+  # Armor netherite
+  NETHERITE_HELMET: 9000
+  NETHERITE_CHESTPLATE: 14000
+  NETHERITE_LEGGINGS: 12000
+  NETHERITE_BOOTS: 8000
+  # Senjata & alat diamond
+  DIAMOND_SWORD: 2500
+  DIAMOND_AXE: 3000
+  DIAMOND_PICKAXE: 3000
+  DIAMOND_SHOVEL: 1000
+  DIAMOND_HOE: 1000
+  # Senjata & alat netherite
+  NETHERITE_SWORD: 8000
+  NETHERITE_AXE: 8500
+  NETHERITE_PICKAXE: 8500
+  NETHERITE_SHOVEL: 6500
+  NETHERITE_HOE: 6500
+  # PvP
+  TOTEM_OF_UNDYING: 1500
+  GOLDEN_APPLE: 250
+  ENCHANTED_GOLDEN_APPLE: 5000
+  END_CRYSTAL: 300
+  RESPAWN_ANCHOR: 400
+  GLOWSTONE: 30
+  GLOWSTONE_DUST: 8
+  OBSIDIAN: 40
+  CRYING_OBSIDIAN: 80
+  ENDER_PEARL: 100
+  EXPERIENCE_BOTTLE: 60
+  ENDER_CHEST: 800
+  SHULKER_BOX: 3000
+  ELYTRA: 20000
+  FIREWORK_ROCKET: 50
+  TNT: 150
+  COBWEB: 30
+  SHIELD: 400
+  BOW: 300
+  CROSSBOW: 400
+  ARROW: 5
+  GOLDEN_CARROT: 40
+  COOKED_BEEF: 20
+  # Blok
+  STONE: 5
+  COBBLESTONE: 3
+  OAK_LOG: 10
+  OAK_PLANKS: 3
+  ANVIL: 300
+  ENCHANTING_TABLE: 1500
+  BEACON: 12000
