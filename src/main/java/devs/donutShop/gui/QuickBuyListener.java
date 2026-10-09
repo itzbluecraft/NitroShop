@@ -3,6 +3,8 @@ package devs.donutShop.gui;
 import devs.donutShop.DonutShop;
 import devs.donutShop.data.ShopDataManager;
 import devs.donutShop.dialog.ShopDialogManager;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,61 +28,59 @@ public class QuickBuyListener implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent e) {
-        if (!(e.getInventory().getHolder() instanceof QuickBuyGUI gui)) return;
+        if (!(e.getInventory().getHolder() instanceof QuickBuyGUI)) return;
         e.setCancelled(true);
         if (e.getClickedInventory() != e.getInventory()) return;
         if (!(e.getWhoClicked() instanceof Player p)) return;
 
         int slot = e.getRawSlot();
+        if (slot < 0 || slot >= ShopDataManager.SLOTS) return;
+
         ShopDialogManager dialogs = plugin.getDialogManager();
+        ItemStack stored = plugin.getDataManager().getLayout(p)[slot];
+        boolean empty = stored == null || stored.getType().isAir();
 
-        switch (slot) {
-            case QuickBuyGUI.SLOT_FILTER -> gui.cycleFilter();
-            case QuickBuyGUI.SLOT_REFRESH -> gui.refresh();
-            case QuickBuyGUI.SLOT_AUCTION ->
-                    runCommandLater(p, plugin.getConfig().getString("auction-command", "ah"), false);
-            case QuickBuyGUI.SLOT_YOUR_ITEMS ->
-                    runCommandLater(p, plugin.getConfig().getString("your-items-command", "ah"), false);
-            case QuickBuyGUI.SLOT_SEARCH ->
-                    Bukkit.getScheduler().runTask(plugin, () -> dialogs.openSearchDialog(p));
-            case QuickBuyGUI.SLOT_EDIT -> gui.toggleEditMode();
-            default -> {
-                if (slot < 0 || slot >= ShopDataManager.SLOTS) return;
-                int layoutSlot = gui.layoutSlotAt(slot);
-                if (layoutSlot < 0) return;
+        // Slot kosong: langsung pilih item baru
+        if (empty) {
+            Bukkit.getScheduler().runTask(plugin, () -> dialogs.openChooseItemDialog(p, slot, ""));
+            return;
+        }
 
-                ItemStack[] layout = plugin.getDataManager().getLayout(p);
-                ItemStack stored = layout[layoutSlot];
-                boolean empty = stored == null || stored.getType().isAir();
+        // Klik kanan: edit item (enchant, jumlah, atau hapus)
+        if (e.isRightClick()) {
+            Bukkit.getScheduler().runTask(plugin, () -> dialogs.editItem(p, slot, stored));
+            return;
+        }
 
-                if (gui.isEditMode()) {
-                    if (empty) {
-                        Bukkit.getScheduler().runTask(plugin, () -> dialogs.openChooseItemDialog(p, layoutSlot, ""));
-                    } else {
-                        plugin.getDataManager().removeItem(p, layoutSlot);
-                        gui.refresh();
-                    }
-                } else if (!empty) {
-                    ItemStack give = stored.clone();
-                    if (!canFit(p, give)) {
-                        p.sendMessage("§cInventory kamu penuh.");
-                        return;
-                    }
-                    p.getInventory().addItem(give);
-                    p.sendMessage("§aKamu mendapatkan §f" + give.getAmount() + "x "
-                            + ShopDialogManager.formatItemName(give.getType().name()) + "§a.");
-                }
+        // Klik kiri: beli item
+        ItemStack give = stored.clone();
+        if (!canFit(p, give)) {
+            p.sendMessage("§cInventory kamu penuh.");
+            return;
+        }
+
+        double price = plugin.getDataManager().getTotalPrice(stored);
+        Economy eco = plugin.getEconomy();
+        if (eco != null && price > 0) {
+            if (!eco.has(p, price)) {
+                p.sendMessage("§cUangmu kurang. Butuh §f" + plugin.formatPrice(price) + "§c.");
+                return;
+            }
+            EconomyResponse r = eco.withdrawPlayer(p, price);
+            if (!r.transactionSuccess()) {
+                p.sendMessage("§cPembayaran gagal.");
+                return;
             }
         }
-    }
 
-    private void runCommandLater(Player p, String command, boolean console) {
-        String cmd = command.startsWith("/") ? command.substring(1) : command;
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            p.closeInventory();
-            if (console) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
-            else p.performCommand(cmd);
-        });
+        p.getInventory().addItem(give);
+        String name = ShopDialogManager.formatItemName(give.getType().name());
+        if (eco != null && price > 0) {
+            p.sendMessage("§aKamu membeli §f" + give.getAmount() + "x " + name
+                    + " §aseharga §f" + plugin.formatPrice(price) + "§a.");
+        } else {
+            p.sendMessage("§aKamu mendapatkan §f" + give.getAmount() + "x " + name + "§a.");
+        }
     }
 
     private boolean canFit(Player p, ItemStack item) {
